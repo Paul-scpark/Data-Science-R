@@ -1,0 +1,219 @@
+---
+title: "HW2_21500268, ParkSeongchan"
+output: html_document
+---
+
+## Reading Data, Library
+```{r}
+load("C:/Users/PRIME#31/Desktop/2020-1/DS/2020-1/homework2_2020.RData")
+head(cust.df)
+head(bankruptcy_df)
+getwd()
+library(stringr)
+library(tidyr)
+library(lubridate)
+```
+데이터를 읽고, 2개의 Data frame을 확인한다.
+
+또한 이번 작업에서 필요한 packages들을 불러온다.
+
+### PART 1
+
+## Question 1
+```{r}
+str(cust.df)
+sapply(cust.df[1:11], class)
+```
+str 함수를 통해서 데이터의 구조를 파악한다.
+
+데이터의 observation은 1000개, variable은 11개이다.
+
+각 variable의 타입은 sapply 함수를 통해 한번에 파악할 수 있다.
+
+
+## Question 2
+```{r}
+str(cust.df)
+cust.df$custid <- as.character(cust.df$custid)
+cust.df$state.of.res <- as.factor(cust.df$state.of.res)
+cust.df$sex <- as.factor(cust.df$sex)
+cust.df$marital.stat <- as.factor(cust.df$marital.stat)
+cust.df$housing.type <- as.factor(cust.df$housing.type)
+```
+str 함수를 통해서 현재 Data frame의 type을 확인한다.
+
+1. custid 변수는 id를 의미하기 때문에 character로 변경한다. (3번 문제에서 character로 변환될 예정)
+
+2. state.of.res 변수는 미국의 주를 의미하므로 factor로 변경한다.
+
+3. sex 변수는 남자와 여자라는 2개로 분류하므로 factor로 변경한다.
+
+4. marital.stat 변수는 결혼과 관련된 상태로 분류하므로 factor로 변경한다.
+
+5. housing.type 변수는 집 계약의 상태에 따라 분류하므로 factor로 변경한다.
+
+
+## Question 3
+```{r}
+cust.df$custid <- str_pad(cust.df$custid, 7, 'left', pad = "0")
+cust.df$custid <- str_pad(cust.df$custid, 8, 'left', pad = "c")
+
+head(cust.df)
+```
+먼저 가장 앞의 'c'를 제외하고, str_pad 함수로 빈칸은 0으로 넣어서 7자리를 만들어준다.
+
+그 후에 다시 한번 str_pad 함수를 사용해서 가장 앞에 'c'를 붙여준다.
+
+head 함수를 통해서 그 결과를 확인할 수 있다.
+
+
+## Question 4
+```{r}
+num_of_NA <- colSums(is.na(cust.df))
+num_of_not_NA <- colSums(!is.na(cust.df))
+
+num_of_NA
+num_of_NA / (num_of_NA + num_of_not_NA)
+```
+colSums 함수를 통해 각 열 별로의 NA와 NA가 아닌 값들의 합을 구해서 각각 이름에 맞춰 할당한다.
+
+각 변수별로 NA의 개수는 num_of_NA라는 변수를 통해 확인 할 수 있다.
+
+또한 각 변수 별로의 비율은 NA에서 NA와 NA가 아닌 값들의 합을 나눠준다.
+
+
+## Question 5
+```{r}
+summary(cust.df[, c(-4:-5)])
+table(rowSums(is.na(cust.df[, c(-4:-5)])))
+```
+NA가 10%가 넘는 변수들은 'is.employed'와 'Income' 이다. 따라서 이들을 제외한 Data frame을 사용한다.
+
+이 Data frame에서 행을 기준으로 NA를 구하기 위해서 rowSums과 is.na 함수를 이용한다.
+
+그리고 이것들이 같은 사람에게서 나왔는지 확인하기 위해 table 함수를 통해 전체로 확인해본다.
+
+따라서 결국, NA가 10%가 넘지 않는 변수들에서 총 56명의 모두 동일한 고객들에게서 NA가 나왔음을 알 수 있다.
+
+
+## Question 6
+```{r}
+cust.df$is.employed <- as.factor(cust.df$is.employed)
+
+cust.df$is.employed <- ifelse(is.na(cust.df$is.employed) == TRUE, "missing",
+                              ifelse(cust.df$is.employed == "TRUE", "employed", "not employed"))
+
+table(cust.df$is.employed)
+```
+먼저 기존에 logical type에서 factor type으로 변환시킨다.
+
+그 후, ifelse 함수를 통해서 NA인 경우에는 'missing'으로, TRUE는 'employed', FALSE는 'not employed'로 할당한다.
+
+이 과정을 통해 table 함수로 전체를 확인해보면, 새롭게 할당한 3개의 값으로 바뀐 것을 볼 수 있다.
+
+
+## Question 7
+```{r}
+median.income <- aggregate(Income ~ state.of.res, cust.df, median)
+mean.income <- aggregate(Income ~ state.of.res, cust.df, mean)
+
+avg_income <- cbind(median.income, mean.income)
+avg_income <- avg_income[, c(1, 2, 4)]
+
+names(avg_income)[2:3] <- ifelse(names(avg_income)[2:3] == "Income", "median.income", "mean.income")
+
+head(avg_income)
+```
+aggregate 함수를 통해서 state.of.res 기준으로 Income의 median과 mean을 구해서 각각의 새로운 Data frame에 할당한다.
+
+그리고 cbind를 통해서 두 Data frame을 붙이고, 3번째 열에 있는 state.of.res가 중복되므로 이를 제외시킨 avg_income을 만든다.
+
+그리고 열의 이름을 'median.income'과 'mean.income'으로 수정한다.
+
+head 함수를 통해서 그 결과를 확인할 수 있다.
+
+
+## Question 8
+```{r}
+cust.df <- merge(cust.df, avg_income, by = 'state.of.res')
+cust.df$Income <- ifelse(is.na(cust.df$Income), cust.df$mean.income, cust.df$Income)
+sum(is.na(cust.df$Income))
+```
+merge 함수로 'state.of.res' 변수를 기준으로 cust.df와 avg_income이라는 두 Data frame을 병합한다.
+
+그리고 ifelse 함수를 통해 Income 변수에서 NA인 값을 mean.income 값으로 대체한다.
+
+이를 통해 is.na의 합이 0인 것을 볼 수 있다.
+
+
+## Question 9
+```{r}
+cust.df$income.relative <- cust.df$Income / cust.df$median.income
+head(cust.df)
+```
+각 사람들의 Income과 median.income으로 나눈 것을 cust.df의 새로운 변수 income.relative에 할당한다.
+
+그리고 head 함수를 통해 확인하면 가장 마지막 열에 추가된 것을 볼 수 있다.
+
+
+## Question 10, 11
+```{r}
+summary(cust.df)
+
+par(mfrow = c(1, 2))
+boxplot(cust.df$Income)
+hist(cust.df$Income)
+
+boxplot(cust.df$age)
+hist(cust.df$age)
+```
+summary 함수를 통해서 cust.df를 전체적으로 확인한다.
+
+1. 소득을 의미하는 Income이 음수의 값을 가질 수 없으므로 명백한 오류이다.
+
+2. 나이를 의미하는 age가 0살을 의미하는 것이 정확히 무엇인지 확인이 필요하다.
+
+3. 나이를 의미하는 age가 146.7살이 가능한지에 대해서 정확히 확인이 필요하다.
+
+
+
+### PART 2
+
+## Question 1
+```{r}
+head(bankruptcy_df)
+```
+이 Data frame은 tidy data가 아니다.
+
+그 이유는 index 열은 variables 형태를 가지고 있으므로 Columns으로 들어가야 한다.
+
+무의미한 rownumber가 들어가 있다.
+
+
+## Question 2
+```{r}
+bankruptcy_df <- bankruptcy_df[2:4]
+bankruptcy_df <- spread(bankruptcy_df, index, rating)
+head(bankruptcy_df)
+
+save(bankruptcy_df, file = '~/bankruptcy_df_tidy.RData')
+```
+먼저 무의미한 첫번째 열을 제외한다.
+
+그리고 spread 함수를 통해서 index를 KEY로, rating을 VAL로 바꿔서 tidy한 형태로 변환하다.
+
+그리고 save를 통해 RData 파일로 저장한다.
+
+
+## Question 3
+```{r}
+bankruptcy_df[2:8] <- ifelse(bankruptcy_df[2:8] == 'P', 'Positive', 
+                             ifelse(bankruptcy_df[2:8] == 'A', 'Average', 
+                                    ifelse(bankruptcy_df[2:8] == 'N', 'negative', 
+                                           ifelse(bankruptcy_df[2:8] == 'B', 'Bankruptcy', 'Non-Bankruptcy'))))
+
+head(bankruptcy_df)
+```
+ifelse 함수를 통해서 'P'는 'Positive', 'A'는 'Average', 'N'은 'negative', 'B'는 'Bankruptcy', 'NB'는 'Non-Bankruptcy'로 변환한다.
+
+그리고 head 함수를 통해서 그 결과를 확인할 수 있다.

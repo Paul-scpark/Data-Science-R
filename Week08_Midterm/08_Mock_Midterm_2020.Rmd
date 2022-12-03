@@ -1,0 +1,162 @@
+---
+title: "Midterm_21500268_ParkSeongchan"
+author: "Park Seongchan"
+date: '2020 4 17 '
+output: html_document
+---
+
+### Part 1
+
+## Import library
+```{r setup}
+library(tidyr)
+library(stringr)
+library(lubridate)
+library(dplyr)
+```
+
+## Q1 
+```{r}
+insurance <- read.csv("insurance.csv")
+head(insurance)
+```
+csv 파일 형태이므로 read.csv 함수를 통해 데이터를 읽는다.
+
+## Q2
+```{r}
+str(insurance)
+summary(insurance)
+table(rowSums(is.na(insurance)))
+colSums(is.na(insurance))
+```
+str 함수를 통해 총 7개의 변수와 1338개의 observation이 있음을 볼 수 있습니다.
+
+7개의 변수는 age, sex, bmi, children, smoker, region, charges로 나뉘어 있고, 순서대로 num, chr, num, num, chr, chr, num의 type을 가지고 있습니다.
+
+그리고 summary 함수를 통해서 각 변수들의 형태에 따라서 numeric type의 변수들의 최대, 최소, 평균 등에 대한 정보에 대해서 알 수 있습니다.
+
+또한 rowSums과 colSums을 통해서 데이터에서 NA의 값들이 있는지 여부를 파악할 수 있습니다. (NA 없음)
+
+## Q3
+```{r}
+insurance$bmi_group <- ifelse(insurance$bmi <= 18.5, 'light', 
+                              ifelse(insurance$bmi <= 24.9, 'normal', 'heavy'))
+head(insurance)
+aggregate(charges ~ bmi_group, insurance, mean)
+```
+ifelse 함수를 통해 그룹을 나눴고, aggregate 함수를 통해 그룹 별 평균 보험 수령액을 구했습니다.
+
+head 함수를 통해서 bmi_group이 bmi 값에 따라서 들어간 것을 볼 수 있습니다.
+
+보험금을 가장 많이 들었던 그룹은 13936.617로 'heavy'이고, 가장 적게 들었던 그룹은 8657.621로 'light'입니다.
+
+## Q4
+```{r}
+aggregate(bmi ~ sex, insurance, mean)
+aggregate(bmi ~ sex, insurance, sd)
+
+female <- insurance %>% filter(sex == 'female')
+male <- insurance %>% filter(sex == 'male')
+
+par(mfrow = c(1, 2))
+hist(female$bmi)
+hist(male$bmi)
+```
+먼저 aggregate 함수를 통해서 성별에 대한 bmi 평균과 표준편차를 구한다.
+
+값을 통해 볼 수 있듯이 성별 별로 평균과 표준편차는 거의 유사하다.
+
+이를 조금 더 직관적으로 이해하기 위해 히스토그램으로 표현해도 두 데이터의 분포가 유사한 것을 볼 수 있다.
+
+## Q5
+```{r}
+par(mfrow = c(1, 2))
+quantile(insurance$charges)
+table(insurance$charges >= 20000)
+hist(insurance$charges)
+boxplot(insurance$charges)
+```
+히스토그램과 boxplot을 통해 charges 변수의 분포를 확인해볼 수 있다.
+
+다음과 같이 확인해보니 평균이 약 9382이고, 3사분위수는 16639라는 것을 알 수 있다. 
+
+실제로 20000보다 작은 데이터가 1065개이고, 보다 큰 데이터는 273개 인 것을 확인할 수 있다.
+
+이를 히스토그램과 boxplot을 통해 확인해보면 그래프의 모양과 같다.
+
+이런 분포가 나오는 이유는 일반적으로 지출하는 보험료가 거의 대부분 비슷하다. 하지만 특정 상황에 따라 일부는 평균보다 비싼 보험료를 내는 사람도 있기 때문에 다음과 같은 분포가 나왔다고 생각한다.
+
+## Q6
+```{r}
+aggregate(charges ~ smoker, insurance, mean)
+aggregate(bmi ~ smoker, insurance, mean)
+aggregate(age ~ smoker, insurance, mean)
+```
+우선 흡연의 여부에 따라 평균 보혐료를 구하면, 흡연자는 약 32050, 비흡연자는 8434로 흡연자가 약 2.5배 정도 높은 것을 알 수 있다.
+
+이에 대한 상관관계를 파악하기 위하여 흡연과 연관되어 있는 변수를 알기 위해 다른 변수들에도 적용시켜보았다.
+
+먼저 bmi와 흡연의 상관여부는 흡연 여부와 상관 없이 30.5 정도의 비슷한 값을 보였다.
+
+또한 나이의 평균 역시 약 39세 정도로 유사한 값을 보인 것을 알 수 있다.
+
+따라서 이러한 결과를 볼 때, 구체적인 이유는 이 데이터를 통해 알 수는 없겠지만, 과거의 사례를 통해 볼 때, 흡연자는 비흡연자보다 높게 보험료를 내야 할 것이다.
+
+## Q7
+```{r}
+aggregate(charges ~ children, insurance, mean)
+```
+aggregate 함수를 써서 자녀의 수에 따라 평균 보험 지출 금액을 보면 다음과 같다.
+
+이 결과를 통해 볼 수 있듯이 자녀가 4명 또는 5명일때의 평균 보험료가 각각 13850, 8786인데, 2, 3명일 때는 이보다 더 큰 15073, 15355임을 확인 할 수 있다.
+
+따라서 자녀의 수가 많다고 해서 무조건 더 많은 의료비용이 발생하는 것은 아니라고 볼 수 있다.
+
+## Q8
+```{r}
+cuts <- quantile(insurance$age, c(0, 0.1, 0.9, 1), na.rm = T)
+cuts
+young_group <- insurance %>% filter(age < 19)
+old_group <- insurance %>% filter(age > 59)
+
+mean(young_group$charges)
+mean(old_group$charges)
+```
+먼저 나이에 따라 상위 10%, 하위 10%를 구하기 위하여 quantile 함수를 사용한다.
+
+그에 따른 결과로 하위 10%에 기준이 되는 나이는 19살, 상위 10%에 기준이 되는 나이는 59살이었다.
+
+따라서 dplyr의 filter 함수를 이용하여 각각을 young_group과 old_group으로 분리했다.
+
+이에 따라서 평균을 구하면, 상위 10%는 약 21248.02 정도였고, 하위 10%는 약 7086.218이었다. 이 둘의 차이는 약 14161.8 정도임을 확인할 수 있다.
+
+## Q9
+```{r}
+aggregate(charges ~ sex, insurance, mean)
+```
+aggregate 함수를 통해 성별에 따라 평균 보험지급액을 비교해본다.
+
+그 결과를 통해 볼 수 있듯, 남성이 약 13956, 여성이 12569라는 것을 알 수 있다.
+
+이를 통해 남성이 여성보다 약 1400 정도 높은 것을 알 수 있다.
+
+## Q10
+```{r}
+aggregate(smoker == 'yes' ~ sex, insurance, mean)
+aggregate(age ~ sex, insurance, mean)
+aggregate(bmi ~ sex, insurance, mean)
+aggregate(children ~ sex, insurance, mean)
+```
+우선 aggregate 함수를 통해서 흡연 고객의 평균은 남성은 약 24%, 여성은 17%라는 것을 알 수 있고, 남성이 더 많다.
+
+앞선 9번 문제에서 평균 보험료가 남성이 여성보다 약 1400 정도 높은 것을 보았는데, 주어진 데이터에서의 상관관계를 확인하기 위해 각 변수 별로의 관계를 구해보았다.
+
+먼저 성별과 age의 평균과 관련해서는 남성과 여성 모두 약 39세 정도의 수치를 보였으므로, 둘은 큰 상관이 없다고 생각했다.
+
+두번째로는, 성별과 bmi 평균과 비교했을때는 오히려 여성이 남성보다 bmi 평균 수치가 높은 것을 볼 수 있으므로, 이 또한 큰 상관이 없다고 생각했다.
+
+마지막으로 성별과 자녀의 수에 대한 비교 역시도 두 수치가 약 1명 정도로 비슷했던 것을 볼 수 있다.
+
+따라서 남성이 여성보다 평균보험료가 큰 이유는 주어진 데이터 속에서 흡연율과 상관관계가 있다고 할 수 있다.
+
+
