@@ -53,7 +53,7 @@ Handong University, 2020 Spring, Prof. Hyebong Choi
 - Simple Modeling (Linear Regression, Logistic Regression)
 
 #### Week16 - Final Exam
-- Test of Machine Learning and Deep Learning Theory
+- Modeling based on R
 
 ## Contact
 :email: solver.paul@gmail.com
